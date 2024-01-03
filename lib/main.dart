@@ -18,6 +18,11 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'Contact Buddy'),
+      routes: <String, WidgetBuilder> {
+        '/Add': (BuildContext context) => const AddContactPage(),
+        '/Update': (BuildContext context) => const AddContactPage(),
+
+      },
     );
   }
 }
@@ -30,6 +35,7 @@ class MyHomePage extends StatefulWidget {
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
+
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 2;
@@ -73,7 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: () {Navigator.pushNamed(context, '/Add');},
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ), 
@@ -82,3 +88,65 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
+
+class AddContactPage extends StatefulWidget {
+  const AddContactPage({super.key});
+
+  @override
+  State<AddContactPage> createState() => _AddContactPageState();
+}
+
+
+
+  class _AddContactPageState extends State<AddContactPage> {
+    final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+    @override
+    Widget build(BuildContext context) {
+      return Scaffold(
+          appBar: AppBar(
+              backgroundColor: Theme
+                  .of(context)
+                  .colorScheme
+                  .inversePrimary,
+              title: Center(
+                  child: Text("widget.title"))
+          ),
+
+          body: Center(
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    TextFormField(
+                      decoration: const InputDecoration(
+                        hintText: 'Enter your email',
+                      ),
+                      validator: (String? value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter some text';
+                        }
+                        return null;
+                      },
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // Validate will return true if the form is valid, or false if
+                          // the form is invalid.
+                          if (_formKey.currentState!.validate()) {
+                            // Process data.
+                          }
+                        },
+                        child: const Text('Submit'),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+          )
+      );
+    }
+  }
