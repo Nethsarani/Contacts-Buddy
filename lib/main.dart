@@ -121,12 +121,26 @@ class AddContactPage extends StatefulWidget {
                   children: <Widget>[
                     TextFormField(
                       decoration: const InputDecoration(
-                        hintText: 'Enter your email',
+                        hintText: 'Enter your name',
                       ),
                       validator: (String? value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter some text';
+                          return 'Please enter the name';
                         }
+                        return null;
+                      },
+children: <Widget>[
+                    TextFormField(
+                      decoration: const InputDecoration(
+                        hintText: 'Enter your mobile number',
+                      ),
+                      validator: (String? value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter the number';
+                        }
+else if (value contains ) {
+return 'Please enter a valid number';
+}
                         return null;
                       },
                     ),
