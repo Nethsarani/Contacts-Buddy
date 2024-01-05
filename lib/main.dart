@@ -1,29 +1,28 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:contacts_buddy/HomePage.dart';
+import 'package:contacts_buddy/DatabaseOp.dart';
 
-void main() {
-  runApp(MyApp());
+
+void main() async {
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-debugShowCheckedModeBanner: false,
+      debugShowCheckedModeBanner: false,
       title: 'Contact Buddy',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: MyHomePage(title: 'Contact Buddy'),
+      home: const MyHomePage(title: 'Contact Buddy'),
+      //initialRoute: '/',
       //routes: <String, WidgetBuilder> {
-      //  '/Add': (BuildContext context) => const AddContactPage(),
-       // '/Update': (BuildContext context) => const AddContactPage(),
-
-     // },
+        //'/': (BuildContext context)=>MyHomePage(title: 'Contact Buddy'),
     );
   }
 }

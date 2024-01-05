@@ -41,11 +41,11 @@ class SQL {
   }
 
   static Future<int> updateData(
-      int id, String name, String? contactNumber) async{
+      int? id, String name, String? contactNumber) async{
     final db = await SQL.db();
     final data = {
       'name': name,
-      'contactNumber': contactNumber,
+      'number': contactNumber,
       'createdAt': DateTime.now().toString()
     };
     final result=
@@ -58,7 +58,9 @@ class SQL {
     try{
       await db.delete('contact',where: "id=?", whereArgs: [id]);
     }
-    catch (e){}
+    catch (e){
+      print("error");
+    }
   }
 
 }

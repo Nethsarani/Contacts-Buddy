@@ -1,8 +1,5 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:contacts_buddy/DatabaseOp.dart';
-import 'package:sqflite/sqflite.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -16,25 +13,21 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<Map<String, dynamic>> _allData=[];
-  bool _isLoading=true;
 
 
   void _refreshData() async{
     final data=await SQL.getAllData();
     setState(() {
       _allData=data;
-      _isLoading=false;
     });
   }
 
   @override
   void initState(){
     super.initState();
-    SQL.db();
     _refreshData();
 
   }
-  //SQL.createData('asdfgh','14725')
 
   Future<void> _addData() async{
   await SQL.createData(_nameControl.text,_numberControl.text);
@@ -51,6 +44,16 @@ class _MyHomePageState extends State<MyHomePage> {
     ScaffoldMessenger.of(context)
         .showSnackBar(const SnackBar(content: Text("Data deleted")));
     _refreshData();
+  }
+
+  List<Map<String, dynamic>> searchResults = [];
+
+  void onQueryChanged(String query) {
+    setState(() {
+      searchResults = _allData
+          .where((item) => item['name'].toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    });
   }
 
 
@@ -81,15 +84,15 @@ class _MyHomePageState extends State<MyHomePage> {
             children: [
               TextField(
                 controller: _nameControl,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: "Name",
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               TextField(
                 controller: _numberControl,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: "Number",
                 ),
@@ -109,9 +112,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     print("Data added");
                   },
                   child: Padding(
-                    padding: EdgeInsets.all(18),
+                    padding: const EdgeInsets.all(18),
                     child: Text(id==null?"Add Data":"Update",
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 18, fontWeight: FontWeight.w500,
                     ),
                     ),
@@ -133,49 +136,74 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Text(widget.title))
       ),
 
-      body: _isLoading
-      ?Center(
-        child: CircularProgressIndicator(),
-      )
-          :ListView.builder(
-        itemCount: _allData.length,
-        itemBuilder: (context,index)=>Card(
-          margin: EdgeInsets.all(15),
-          child: ListTile(
-            title: Padding(
-              padding: EdgeInsets.symmetric(vertical: 5),
-              child: Text(
-                _allData[index]['name'],
+      body: Column(
+        children: [
+          SearchBar(
+              //onQueryChanged: onQueryChanged
+          ),
+
+          Expanded(
+            child: ListView.builder(
+              itemCount: searchResults.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(searchResults[index]['name']),
+                );
+                },
+            ),
+          ),
+
+          Expanded(
+            child: Center(
+              child: ListView.builder(
+                itemCount: _allData.length,
+                itemBuilder: (context,index)=>Card(
+                    margin: const EdgeInsets.all(20),
+                    child: ListTile(
+                      title: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 5),
+                        child: Text(
+                          _allData[index]['name'],
+                        ),
+                      ),
+                      subtitle: Text(_allData[index]['number']),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            onPressed: (){
+                              showBottomSheet(_allData[index]['id']);
+                            },
+                            icon: const Icon(
+                              Icons.edit,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: (){
+                              _deleteData(_allData[index]['id']);
+                            },
+                            icon: const Icon(
+                              Icons.delete,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                ),
               ),
             ),
-            subtitle: Text(_allData[index]['number']),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                    onPressed: (){
-                      showBottomSheet(_allData[index]['id']);
-                    },
-                    icon: Icon(
-                      Icons.edit,
-                    ),
-                ),
-                IconButton(
-                    onPressed: (){
-                      _deleteData(_allData[index]['id']);
-                    },
-                    icon: Icon(
-                    Icons.delete,
-                ),
-                ),
-              ],
-            ),
-          )
-        ),
+          ),
+
+        ],
       ),
+
+
+
+
       floatingActionButton: FloatingActionButton(
-        onPressed: () =>showBottomSheet(null),
-          //Navigator.pushNamed(context, '/Add');
+        onPressed: () =>
+            showBottomSheet(null),
+          //Navigator.pushNamed(context, '/Add'),
 
         tooltip: 'add',
         child: const Icon(Icons.add),
@@ -184,3 +212,32 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
+class SearchBar extends StatefulWidget {
+@override
+_SearchBarState createState() => _SearchBarState();
+}
+
+class _SearchBarState extends State<SearchBar> {
+  String query = '';
+
+  void onQueryChanged(String newQuery) {
+    setState(() {
+      query = newQuery;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: TextField(
+        onChanged: onQueryChanged,
+        decoration: const InputDecoration(
+          labelText: 'Search',
+          border: OutlineInputBorder(),
+          prefixIcon: Icon(Icons.search),
+        ),
+      ),
+    );
+  }
+}
