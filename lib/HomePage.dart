@@ -1,6 +1,8 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:contacts_buddy/DatabaseOp.dart';
+import 'package:sqflite/sqflite.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -13,12 +15,113 @@ class MyHomePage extends StatefulWidget {
 
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 2;
+  List<Map<String, dynamic>> _allData=[];
+  bool _isLoading=true;
 
-  void _incrementCounter() {
+
+  void _refreshData() async{
+    final data=await SQL.getAllData();
     setState(() {
-      _counter++;
+      _allData=data;
+      _isLoading=false;
     });
+  }
+
+  @override
+  void initState(){
+    super.initState();
+    SQL.db();
+    _refreshData();
+
+  }
+  //SQL.createData('asdfgh','14725')
+
+  Future<void> _addData() async{
+  await SQL.createData(_nameControl.text,_numberControl.text);
+  _refreshData();
+  }
+
+  Future <void> _updateData(int id) async{
+    await SQL.updateData(id,_nameControl.text,_numberControl.text);
+    _refreshData();
+  }
+
+  Future <void> _deleteData(int id) async{
+    await SQL.deleteData(id);
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text("Data deleted")));
+    _refreshData();
+  }
+
+
+
+  final TextEditingController _nameControl=TextEditingController();
+  final TextEditingController _numberControl=TextEditingController();
+
+  void showBottomSheet(int? id) async{
+    if(id!=null){
+      final existinData=_allData.firstWhere((element) => element['id']==id);
+      _nameControl.text=existinData['name'];
+      _numberControl.text=existinData['number'];
+    }
+    showModalBottomSheet(
+      elevation: 5,
+        isScrollControlled: true,
+        context: context,
+        builder: (_)=>Container(
+          padding: EdgeInsets.only(
+            top: 30,
+            left: 15,
+            right: 15,
+            bottom: MediaQuery.of(context).viewInsets.bottom+50,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              TextField(
+                controller: _nameControl,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: "Name",
+                ),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: _numberControl,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: "Number",
+                ),
+              ),
+              Center(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    if (id == null) {
+                      await _addData();
+                    }
+                    if(id!=null){
+                      await _updateData(id);
+                    }
+                    _nameControl.text="";
+                    _numberControl.text="";
+                    Navigator.of(context).pop();
+                    print("Data added");
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.all(18),
+                    child: Text(id==null?"Add Data":"Update",
+                    style: TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.w500,
+                    ),
+                    ),
+                  ),
+                )
+              )
+            ],
+          ),
+        )
+    );
   }
 
   @override
@@ -29,110 +132,55 @@ class _MyHomePageState extends State<MyHomePage> {
           title: Center(
               child: Text(widget.title))
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+
+      body: _isLoading
+      ?Center(
+        child: CircularProgressIndicator(),
+      )
+          :ListView.builder(
+        itemCount: _allData.length,
+        itemBuilder: (context,index)=>Card(
+          margin: EdgeInsets.all(15),
+          child: ListTile(
+            title: Padding(
+              padding: EdgeInsets.symmetric(vertical: 5),
+              child: Text(
+                _allData[index]['name'],
+              ),
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: Icon(Icons.add_a_photo),
+            subtitle: Text(_allData[index]['number']),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                    onPressed: (){
+                      showBottomSheet(_allData[index]['id']);
+                    },
+                    icon: Icon(
+                      Icons.edit,
+                    ),
                 ),
-                Expanded(
-                  child: Text('Name', style: Theme.of(context).textTheme.displaySmall,),
+                IconButton(
+                    onPressed: (){
+                      _deleteData(_allData[index]['id']);
+                    },
+                    icon: Icon(
+                    Icons.delete,
+                ),
                 ),
               ],
-            )
-          ],
+            ),
+          )
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {Navigator.pushNamed(context, '/Add');},
-        tooltip: 'Increment',
+        onPressed: () =>showBottomSheet(null),
+          //Navigator.pushNamed(context, '/Add');
+
+        tooltip: 'add',
         child: const Icon(Icons.add),
       ),
-
-
     );
   }
 }
 
-class AddContactPage extends StatefulWidget {
-  const AddContactPage({super.key});
-
-  @override
-  State<AddContactPage> createState() => _AddContactPageState();
-}
-
-
-
-class _AddContactPageState extends State<AddContactPage> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-            backgroundColor: Theme
-                .of(context)
-                .colorScheme
-                .inversePrimary,
-            title: Center(
-                child: Text("widget.title"))
-        ),
-
-        body: Center(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  TextFormField(
-                    decoration: const InputDecoration(
-                      hintText: 'Enter your name',
-                    ),
-                    validator: (String? value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter the name';
-                      }
-                      return null;
-                    },
-                  ),
-                  TextFormField(
-                    decoration: const InputDecoration(
-                      hintText: 'Enter mobile number',
-                    ),
-                    validator: (String? value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter the mobile number';
-                      }
-                      return null;
-                    },
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // Validate will return true if the form is valid, or false if
-                        // the form is invalid.
-                        if (_formKey.currentState!.validate()) {
-                          // Process data.
-                        }
-                      },
-                      child: const Text('Add'),
-                    ),
-                  ),
-                ],
-              ),
-            )
-        )
-    );
-  }
-}
