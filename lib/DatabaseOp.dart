@@ -6,8 +6,7 @@ class SQL {
     await database.execute("""CREATE TABLE contact (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     name TEXT NOT NULL,
-    number TEXT,
-    createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    number TEXT
     )""");
   }
 
@@ -18,26 +17,17 @@ class SQL {
         });
   }
 
-
   static Future<int> createData(String name, String? number) async {
     final db = await SQL.db();
     final data = {'name': name, 'number': number};
     final id = await db.insert('contact', data,
         conflictAlgorithm: sql.ConflictAlgorithm.replace);
-
     return id;
   }
-
-
 
   static Future<List<Map<String, dynamic>>> getAllData() async{
     final db=await SQL.db();
     return db.query('contact',orderBy: 'id');
-  }
-
-  static Future<List<Map<String, dynamic>>> getSingleData(int id) async{
-    final db=await SQL.db();
-    return db.query('contact',where: "id=?", whereArgs: [id], limit: 1);
   }
 
   static Future<int> updateData(
@@ -45,8 +35,7 @@ class SQL {
     final db = await SQL.db();
     final data = {
       'name': name,
-      'number': contactNumber,
-      'createdAt': DateTime.now().toString()
+      'number': contactNumber
     };
     final result=
     await db.update('contact',data,where: "id = ?", whereArgs: [id]);
@@ -62,7 +51,6 @@ class SQL {
       print("error");
     }
   }
-
 }
 
 
